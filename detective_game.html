@@ -283,6 +283,7 @@
         {
             title: "Q1. 莊園大門",
             desc: "大門緊鎖。信箱內有一封<b>邀請函</b>，寫著：「致親愛的 <b>Au</b> 先生」。<br>信箱上刻著：「元素的重量是開門的鑰匙」。",
+			image: "images/q1_scene_empty.jpg",
             question: "請輸入大門的數字密碼（原子量）：",
             answers: ["197", "79", "196.9"],
             loseItem: "invite", // 解開門後，邀請函的線索使命完成
@@ -295,6 +296,7 @@
             question: "請輸入底座密碼以獲得發條鑰匙：",
             answers: ["97"],
             gainItem: "keys", // 獲得鑰匙
+			image: "images/q1_scene_empty.jpg",
             success: "底座彈開，你獲得了一組【發條鑰匙】。"
         },
         {
@@ -303,6 +305,7 @@
             question: "請輸入插入順序 (例如：圓形 三角形 方形)：",
             answers: ["圓形三角形方形", "圓三角方", "circle triangle square"],
             loseItem: "keys", // 鑰匙插在鐘上，從物品欄消失
+			image: "images/q1_scene_empty.jpg",
             success: "鑰匙插入轉動！老爺鐘開始運轉。"
         },
         {
@@ -310,6 +313,7 @@
             desc: "鐘聲節奏：<b>兩短、一短、三短</b>。<br>這對應書房門上的密碼鎖。",
             question: "這節奏代表哪三個數字？",
             answers: ["213", "2 1 3"],
+			image: "images/q1_scene_empty.jpg",
             success: "書房門打開了！"
         },
         {
@@ -318,6 +322,7 @@
             question: "請輸入四位數字密碼：",
             answers: ["1234"],
             gainItem: "uv", // 獲得紫外線燈
+			image: "images/q1_scene_empty.jpg",
             success: "抽屜滑開，你獲得了【紫外線手電筒】。"
         },
         {
@@ -326,6 +331,7 @@
             question: "你要使用什麼工具來閱讀日記？(輸入物品名稱關鍵字)",
             answers: ["紫外線", "手電筒", "uv", "light"],
             loseItem: "uv", // 用完後雖然還在手邊，但為了簡化遊戲流程，視為"線索已解"而移除
+			image: "images/q1_scene_empty.jpg",
             success: "紫光下顯現字跡：「尋找那本《時間的簡史》」。"
         },
         {
@@ -581,3 +587,4 @@
 </body>
 
 </html>
+
