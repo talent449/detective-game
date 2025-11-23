@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鐘錶匠的最後遺產 - 物品欄版</title>
+    <style>
+        /* --- CSS 樣式設計 (Steampunk / Detective 風格) --- */
+        body {
+            background-color: #1a1a1a;
+            color: #dcdcdc;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('https://www.transparenttextures.com/patterns/dark-leather.png');
+        }
+
+        #game-container {
+            background-color: #2c3e50;
+            width: 90%;
+            max-width: 800px;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.9);
+            border: 2px solid #c0392b;
+            text-align: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            color: #f1c40f;
+            margin-top: 0;
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        /* 進度條 */
+        #progress-bar-container {
+            width: 100%;
+            background-color: #34495e;
+            height: 8px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: #f1c40f;
+            transition: width 0.5s;
+        }
+
+        /* 圖片區域 */
+        #puzzle-image-container {
+            width: 100%;
+            height: 250px;
+            background-color: #000;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #555;
+            overflow: hidden;
+            border-radius: 5px;
+        }
+
+        #puzzle-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+
+        #image-placeholder {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        /* 內容區 */
+        .story-text {
+            text-align: left;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-size: 1.05em;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-left: 4px solid #f1c40f;
+            min-height: 60px;
+        }
+
+        .question-text {
+            color: #3498db;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        /* 輸入區 */
+        .input-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        input[type="text"] {
+            padding: 12px;
+            font-size: 16px;
+            width: 60%;
+            border: none;
+            border-radius: 5px;
+            background-color: #ecf0f1;
+            color: #333;
+            outline: none;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #c0392b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #e74c3c;
+        }
+
+        /* 物品欄樣式 (新增部分) */
+        #inventory-panel {
+            margin-top: 25px;
+            background-color: #34495e;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px dashed #7f8c8d;
+        }
+
+        .inventory-title {
+            font-size: 0.9em;
+            color: #bdc3c7;
+            text-align: left;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #inventory-slots {
+            display: flex;
+            gap: 10px;
+            justify-content: center; /* 物品居中 */
+            flex-wrap: wrap;
+            min-height: 60px; /* 確保沒東西時也有高度 */
+        }
+
+        .item-slot {
+            width: 60px;
+            height: 60px;
+            background-color: #2c3e50;
+            border: 2px solid #95a5a6;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            cursor: help;
+            position: relative;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .item-slot:hover {
+            transform: scale(1.1);
+            border-color: #f1c40f;
+        }
+
+        /* Tooltip */
+        .item-slot .tooltip {
+            visibility: hidden;
+            width: 120px;
+            background-color: black;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            bottom: 110%; /* 顯示在上方 */
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+        }
+
+        .item-slot:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* 獲得物品動畫 */
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .new-item {
+            animation: popIn 0.5s ease-out;
+            border-color: #2ecc71;
+        }
+
+        /* 狀態回饋 */
+        #feedback-msg {
+            margin-top: 15px;
+            height: 20px;
+            font-weight: bold;
+        }
+        .success { color: #2ecc71; }
+        .error { color: #e74c3c; }
+
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>鐘錶匠的最後遺產</h1>
+    
+    <div id="progress-bar-container">
+        <div id="progress-bar"></div>
+    </div>
+
+    <div id="puzzle-image-container">
+        <span id="image-placeholder">（線索圖片顯示區）</span>
+        <img id="puzzle-image" src="" alt="Puzzle Clue" onerror="this.style.display='none'; document.getElementById('image-placeholder').style.display='block';">
+    </div>
+
+    <div id="game-content">
+        <div id="puzzle-title" style="font-size: 1.2em; color: #aaa; margin-bottom: 10px;">序章</div>
+        <div id="puzzle-desc" class="story-text">載入中...</div>
+        <div id="puzzle-question" class="question-text"></div>
+        
+        <div class="input-group">
+            <input type="text" id="answer-input" placeholder="在此輸入答案..." autocomplete="off">
+            <button onclick="checkAnswer()">送出</button>
+        </div>
+        
+        <div id="feedback-msg"></div>
+    </div>
+
+    <div id="inventory-panel">
+        <div class="inventory-title">🎒 偵探的隨身物品</div>
+        <div id="inventory-slots">
+            </div>
+    </div>
+</div>
+
+<script>
+    // --- 物品定義 ---
+    // icon: 顯示的表情符號, name: 物品名稱
+    const ITEM_DB = {
+        "invite": { icon: "✉️", name: "神秘邀請函" },
+        "keys":   { icon: "🗝️", name: "發條鑰匙組" },
+        "uv":     { icon: "🔦", name: "紫外線手電筒" },
+        "music":  { icon: "🎼", name: "蜜蜂樂譜" },
+        "map":    { icon: "🗺️", name: "破碎地圖" },
+        "film":   { icon: "🎞️", name: "老式膠捲" },
+        "art":    { icon: "🖼️", name: "維斯的肖像畫" }
+    };
+
+    // --- 題目設定 (新增 gainItem 和 loseItem 欄位) ---
+    // gainItem: 解開這題後"獲得"的物品 ID
+    // loseItem: 解開這題"消耗"掉的物品 ID (代表謎題解開，物品功成身退)
+    const puzzles = [
+        {
+            title: "Q1. 莊園大門",
+            desc: "大門緊鎖。信箱內有一封<b>邀請函</b>，寫著：「致親愛的 <b>Au</b> 先生」。<br>信箱上刻著：「元素的重量是開門的鑰匙」。",
+            question: "請輸入大門的數字密碼（原子量）：",
+            answers: ["197", "79", "196.9"],
+            loseItem: "invite", // 解開門後，邀請函的線索使命完成
+	    image: "images/q1_scene_full.jpg",
+            success: "門開了。你收起了信箱裡的邀請函，但它已經不再重要。"
+        },
+        {
+            title: "Q2. 玄關的鐘聲",
+            desc: "進門後是一座巨大的老爺鐘。鐘面顯示 03:45:15。<br>底座寫著：「密碼是開門的鑰匙(197) 減去 100」。",
+            question: "請輸入底座密碼以獲得發條鑰匙：",
+            answers: ["97"],
+            gainItem: "keys", // 獲得鑰匙
+            success: "底座彈開，你獲得了一組【發條鑰匙】。"
+        },
+        {
+            title: "Q3. 發條的順序",
+            desc: "鑰匙孔旁刻著：「<b>圓</b>滿的開始，<b>尖</b>銳的過程，<b>方</b>正的結束」。<br>你拿出剛獲得的鑰匙準備插入。",
+            question: "請輸入插入順序 (例如：圓形 三角形 方形)：",
+            answers: ["圓形三角形方形", "圓三角方", "circle triangle square"],
+            loseItem: "keys", // 鑰匙插在鐘上，從物品欄消失
+            success: "鑰匙插入轉動！老爺鐘開始運轉。"
+        },
+        {
+            title: "Q4. 鐘擺的秘密",
+            desc: "鐘聲節奏：<b>兩短、一短、三短</b>。<br>這對應書房門上的密碼鎖。",
+            question: "這節奏代表哪三個數字？",
+            answers: ["213", "2 1 3"],
+            success: "書房門打開了！"
+        },
+        {
+            title: "Q5. 書桌的抽屜",
+            desc: "書桌上有四色鎖。桌上的油畫畫著：<b>紅蘋果x1、黃香蕉x2、藍雲x3、綠葉x4</b>。",
+            question: "請輸入四位數字密碼：",
+            answers: ["1234"],
+            gainItem: "uv", // 獲得紫外線燈
+            success: "抽屜滑開，你獲得了【紫外線手電筒】。"
+        },
+        {
+            title: "Q6. 紫外線的線索",
+            desc: "維斯的日記全是白紙。你拿出手電筒照射。",
+            question: "你要使用什麼工具來閱讀日記？(輸入物品名稱關鍵字)",
+            answers: ["紫外線", "手電筒", "uv", "light"],
+            loseItem: "uv", // 用完後雖然還在手邊，但為了簡化遊戲流程，視為"線索已解"而移除
+            success: "紫光下顯現字跡：「尋找那本《時間的簡史》」。"
+        },
+        {
+            title: "Q7. 書架的機關",
+            desc: "書架上有一本霍金的《時間簡史》。<br>需要按下標示該書<b>首版年份</b>的按鈕。",
+            question: "首版年份是？(19xx)",
+            answers: ["1988"],
+            gainItem: "music", // 獲得樂譜
+            success: "書架移開，一張【樂譜】飄落在地。"
+        },
+        {
+            title: "Q8. 掉落的樂譜",
+            desc: "你看著樂譜上的《小蜜蜂》：G, E, E, F...<br>保險箱需要聲音辨識。",
+            question: "下一小節音符是什麼？(唱名)",
+            answers: ["dd", "d d", "re re"],
+            loseItem: "music", // 樂譜用完了
+            gainItem: "map",   // 獲得地圖
+            success: "保險箱打開，裡面是一張【破碎地圖】。"
+        },
+        {
+            title: "Q9. 破碎的地圖",
+            desc: "你查看地圖背面的算式：<b>(Q1答案[197] + Q4答案[213]) / 10</b>。",
+            question: "運算結果指向地圖的哪個區塊？",
+            answers: ["41"],
+            success: "你將目光鎖定在第 41 區。"
+        },
+        {
+            title: "Q10. 星象儀的校準",
+            desc: "地圖41區畫著獵戶座。你需要將星象儀對準獵戶座腰帶指向的最亮恆星。",
+            question: "那是哪一顆星？",
+            answers: ["天狼星", "sirius"],
+            success: "星象儀射出雷射光，指向元素週期表。"
+        },
+        {
+            title: "Q11. 天狼星的光芒",
+            desc: "雷射光停在「矽 (Si)」。地下室門鎖需要原子序。",
+            question: "矽的原子序是多少？",
+            answers: ["14"],
+            success: "密門開啟，進入隱藏實驗室。"
+        },
+        {
+            title: "Q12. 機器人的電路",
+            desc: "機器人線路斷了。電池座：<b>左(+) 右(-)</b>。<br>手上有紅線和黑線。",
+            question: "紅線接哪邊？(左/右)",
+            answers: ["左", "left"],
+            success: "電路接通，機器人啟動了！"
+        },
+        {
+            title: "Q13. 機器人的謎語",
+            desc: "機器人問：「我有城市無房，有山無樹，有水無魚。」<br>它伸出手似乎想要某個東西。",
+            question: "你要把什麼東西交給機器人？",
+            answers: ["地圖", "map"],
+            loseItem: "map", // 地圖交給機器人
+            success: "機器人掃描了地圖，指向顯微鏡。"
+        },
+        {
+            title: "Q14. 顯微鏡下的密碼",
+            desc: "顯微鏡下的血跡細胞排列成：<b>兩個圓圈上下相疊</b>。",
+            question: "這是什麼數字？",
+            answers: ["8"],
+            success: "你記住了數字 8。"
+        },
+        {
+            title: "Q15. 化學藥劑",
+            desc: "筆記：「偶數混合藍與黃」。數字 8 是偶數。",
+            question: "藍色加黃色變什麼顏色？",
+            answers: ["綠", "green"],
+            success: "綠色液體腐蝕了塞子。"
+        },
+        {
+            title: "Q16. 水槽的鑰匙",
+            desc: "水槽下有把W形鑰匙。牆上有櫃子：N, E, S, W。",
+            question: "打開哪個櫃子？",
+            answers: ["w", "西", "west"],
+            gainItem: "film", // 獲得膠捲
+            success: "櫃子打開，獲得一卷【老式膠捲】。"
+        },
+        {
+            title: "Q17. 西洋棋殘局",
+            desc: "將膠捲放入放映機。畫面：白后在 d1，目標 h5 將死。",
+            question: "輸入這步棋 (例如 Qh8)：",
+            answers: ["qh5", "dh5"],
+            loseItem: "film", // 膠捲已放入
+            success: "投影幕升起，露出大保險箱。"
+        },
+        {
+            title: "Q18. 晝夜的長度",
+            desc: "提示「夏至」。設該地夏至晝長16小時。",
+            question: "輸入數字 (晝,夜)：",
+            answers: ["168", "16,8", "16 8"],
+            gainItem: "art", // 這裡邏輯上讓玩家回想起畫，我們具象化為拿到畫
+            success: "第一道鎖解開。你需要維斯的容貌來通過掃描。"
+        },
+        {
+            title: "Q19. 家族的眼睛",
+            desc: "語音：「請讓家族的眼睛看著我。」<br>你拿起身邊有維斯臉孔的物品。",
+            question: "你要拿什麼去掃描？",
+            answers: ["畫", "肖像", "painting", "portrait", "art"],
+            loseItem: "art", // 畫作使用完畢
+            success: "掃描通過！保險箱徹底打開。"
+        },
+        {
+            title: "Q20. 終極謎題",
+            desc: "保險箱裡有一隻懷錶，背面刻著 <b>Tempus Fugit</b>。",
+            question: "請回答這句拉丁文的中文含義：",
+            answers: ["光陰似箭", "時光飛逝", "時間飛逝", "time flies"],
+            success: "GAME CLEAR"
+        }
+    ];
+
+    // --- 遊戲狀態 ---
+    let currentIndex = 0;
+    let inventory = ["invite"]; // 初始擁有的物品 (邀請函)
+
+    function updateInventoryDisplay() {
+        const container = document.getElementById('inventory-slots');
+        container.innerHTML = ""; // 清空
+
+        if (inventory.length === 0) {
+            container.innerHTML = "<span style='color:#7f8c8d; line-height:60px;'>（空無一物）</span>";
+            return;
+        }
+
+        inventory.forEach(itemId => {
+            const item = ITEM_DB[itemId];
+            if (item) {
+                const div = document.createElement('div');
+                div.className = 'item-slot new-item'; // 加入動畫 class
+                div.innerHTML = `${item.icon}<span class="tooltip">${item.name}</span>`;
+                container.appendChild(div);
+                
+                // 動畫跑完移除 class 以免重複觸發
+                setTimeout(() => div.classList.remove('new-item'), 500);
+            }
+        });
+    }
+
+    function loadPuzzle() {
+        const puzzle = puzzles[currentIndex];
+        
+        // 進度條
+        const progress = ((currentIndex) / puzzles.length) * 100;
+        document.getElementById('progress-bar').style.width = `${progress}%`;
+
+        // 文字內容
+        document.getElementById('puzzle-title').innerHTML = puzzle.title;
+        document.getElementById('puzzle-desc').innerHTML = puzzle.desc;
+        document.getElementById('puzzle-question').innerHTML = `🕵️ ${puzzle.question}`;
+        
+        // 清空輸入
+        document.getElementById('answer-input').value = "";
+        document.getElementById('feedback-msg').innerHTML = "";
+        
+        // 圖片處理 (預設使用文字 placeholder)
+        const imgElement = document.getElementById('puzzle-image');
+        const placeholder = document.getElementById('image-placeholder');
+        imgElement.style.display = 'none'; 
+        placeholder.style.display = 'block';
+        placeholder.innerText = "(如需顯示圖片，請將圖片檔放入 images 資料夾)";
+        
+        if (puzzle.image) {
+            imgElement.src = puzzle.image;
+            imgElement.style.display = 'block';
+            placeholder.style.display = 'none';
+        }
+
+        document.getElementById('answer-input').focus();
+    }
+
+    function checkAnswer() {
+        const input = document.getElementById('answer-input').value.trim().toLowerCase().replace(/\s/g, "");
+        const puzzle = puzzles[currentIndex];
+        const correctAnswers = puzzle.answers.map(a => a.toLowerCase().replace(/\s/g, ""));
+        
+        let isCorrect = false;
+        for (let ans of correctAnswers) {
+            if (input.includes(ans) && input.length > 0) {
+                isCorrect = true;
+                break;
+            }
+        }
+
+        const feedback = document.getElementById('feedback-msg');
+
+        if (isCorrect) {
+            feedback.innerHTML = `✅ 正確！ ${puzzle.success}`;
+            feedback.className = "success";
+            
+            // --- 物品邏輯處理 ---
+            // 1. 移除使用掉的物品
+            if (puzzle.loseItem) {
+                const index = inventory.indexOf(puzzle.loseItem);
+                if (index > -1) {
+                    inventory.splice(index, 1);
+                }
+            }
+            // 2. 增加獲得的物品
+            if (puzzle.gainItem) {
+                // 避免重複添加 (雖然線性遊戲不該發生)
+                if (!inventory.includes(puzzle.gainItem)) {
+                    inventory.push(puzzle.gainItem);
+                }
+            }
+            updateInventoryDisplay();
+            // ------------------
+
+            setTimeout(() => {
+                currentIndex++;
+                if (currentIndex < puzzles.length) {
+                    loadPuzzle();
+                } else {
+                    showEnding();
+                }
+            }, 2000); // 延長到2秒，讓玩家看清楚物品變化
+        } else {
+            feedback.innerHTML = "❌ 答案錯誤，請再試試。";
+            feedback.className = "error";
+            const container = document.getElementById('game-container');
+            container.style.transform = "translateX(5px)";
+            setTimeout(() => container.style.transform = "translateX(0)", 100);
+            setTimeout(() => container.style.transform = "translateX(-5px)", 200);
+            setTimeout(() => container.style.transform = "translateX(0)", 300);
+        }
+    }
+
+    function showEnding() {
+        document.getElementById('game-content').innerHTML = `
+            <h2 style="color: #f1c40f; font-size: 2em;">🎉 恭喜通關 🎉</h2>
+            <p class="story-text" style="text-align: center;">
+                你成功解開了所有謎題，<br>繼承了艾德里安·維斯的意志。<br>
+                懷錶在你手中滴答作響，彷彿在訴說著時間的秘密。
+            </p>
+            <p style="font-size: 3em;">THE END</p>
+            <button onclick="location.reload()">重新開始</button>
+        `;
+        document.getElementById('progress-bar').style.width = "100%";
+        document.getElementById('puzzle-image-container').style.display = 'none';
+        // 結局時清空物品欄，或顯示最終傳家寶，這裡選擇清空
+        inventory = [];
+        updateInventoryDisplay();
+    }
+
+    document.getElementById('answer-input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') checkAnswer();
+    });
+
+    // 初始化
+    updateInventoryDisplay();
+    loadPuzzle();
+
+</script>
+
+</body>
+</html>
